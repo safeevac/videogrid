@@ -60,7 +60,12 @@
           </div>
 
           <div class="form-group">
-            <label>Camera Stream URLs</label>
+            <div class="form-label-row">
+              <label>Camera Stream URLs</label>
+              <button type="button" class="btn-secondary btn-small" onclick="checkCameraHealth()">
+                🔍 Check Health
+              </button>
+            </div>
             <div id="streamUrls">
               <!-- Dynamic stream URL inputs will be added here -->
             </div>
@@ -73,11 +78,47 @@
 
       <!-- Active Streams Section -->
       <section class="card">
-        <h2>Active Streams</h2>
+        <div class="section-header">
+          <h2>Active Streams</h2>
+          <button type="button" class="btn-secondary btn-small" onclick="loadStreams()">
+            🔄 Refresh
+          </button>
+        </div>
         <div id="streamsList">
           <p class="empty-state">No active streams</p>
         </div>
       </section>
+    </main>
+
+    <!-- Stream Detail Modal -->
+    <div id="streamDetailModal" class="modal" onclick="closeDetailModal(event)">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h2 id="modalTitle">Stream Details</h2>
+          <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+        </div>
+        <div id="modalBody" class="modal-body">
+          <!-- Content will be inserted here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Camera Health Check Modal -->
+    <div id="healthCheckModal" class="modal" onclick="closeHealthCheckModal(event)">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Camera Health Check</h2>
+          <button class="modal-close" onclick="closeHealthCheckModal()">&times;</button>
+        </div>
+        <div id="healthCheckBody" class="modal-body">
+          <p class="text-secondary">Testing camera connections...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main style="display: none;">
+    <!-- Hidden for structure -->
     </main>
 
     <footer>

@@ -113,7 +113,7 @@ async function loadStreams() {
   }
 }
 
-// Render streams list
+// Render streams list (simplified)
 function renderStreams() {
   if (streams.length === 0) {
     streamsList.innerHTML = '<p class="empty-state">No active streams</p>';
@@ -121,72 +121,112 @@ function renderStreams() {
   }
 
   streamsList.innerHTML = streams.map(stream => `
-    <div class="stream-item" data-stream-id="${stream.streamId}">
-      <div class="stream-header">
-        <div class="stream-title">${stream.streamId}</div>
-        <div class="stream-badge">
-          <span>${stream.clients} ${stream.clients === 1 ? 'client' : 'clients'}</span>
+    <div class="stream-list-item" onclick="showStreamDetail('${stream.streamId}')">
+      <div class="stream-list-header">
+        <div class="stream-list-title">${stream.streamId}</div>
+        <div class="stream-list-badge">
+          <span class="badge-dot"></span>
+          ${stream.clients} ${stream.clients === 1 ? 'client' : 'clients'}
         </div>
       </div>
+      <div class="stream-list-info">
+        <span class="info-chip">${stream.config.columns}×${stream.config.rows} grid</span>
+        <span class="info-chip">${stream.config.outputWidth}×${stream.config.outputHeight}</span>
+        <span class="info-chip">${stream.config.framerate} fps</span>
+        <span class="info-chip">${stream.config.streamUrls.length} cameras</span>
+      </div>
+      <div class="stream-list-actions" onclick="event.stopPropagation()">
+        <button class="btn-action" onclick="openStreamUrl('${stream.streamId}')" title="Open stream">
+          ↗
+        </button>
+        <button class="btn-action btn-danger-action" onclick="deleteStream('${stream.streamId}')" title="Stop stream">
+          ⏹
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
 
-      <div class="stream-info">
-        <div class="info-item">
-          <span class="info-label">Grid Layout</span>
-          <span class="info-value">${stream.config.columns}×${stream.config.rows}</span>
+// Show stream detail modal
+function showStreamDetail(streamId) {
+  const stream = streams.find(s => s.streamId === streamId);
+  if (!stream) return;
+
+  document.getElementById('modalTitle').textContent = `${stream.streamId}`;
+  document.getElementById('modalBody').innerHTML = `
+    <div class="detail-section">
+      <h3>Configuration</h3>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="detail-label">Grid Layout</span>
+          <span class="detail-value">${stream.config.columns}×${stream.config.rows}</span>
         </div>
-        <div class="info-item">
-          <span class="info-label">Resolution</span>
-          <span class="info-value">${stream.config.outputWidth}×${stream.config.outputHeight}</span>
+        <div class="detail-item">
+          <span class="detail-label">Resolution</span>
+          <span class="detail-value">${stream.config.outputWidth}×${stream.config.outputHeight}</span>
         </div>
-        <div class="info-item">
-          <span class="info-label">Framerate</span>
-          <span class="info-value">${stream.config.framerate} fps</span>
+        <div class="detail-item">
+          <span class="detail-label">Framerate</span>
+          <span class="detail-value">${stream.config.framerate} fps</span>
         </div>
-        <div class="info-item">
-          <span class="info-label">Cameras</span>
-          <span class="info-value">${stream.config.streamUrls.length}</span>
+        <div class="detail-item">
+          <span class="detail-label">Active Clients</span>
+          <span class="detail-value">${stream.clients}</span>
         </div>
       </div>
+    </div>
 
-      <div class="stream-url-display">
-        <div class="url-label">Stream URL:</div>
-        <div class="url-container">
-          <input type="text"
-                 class="url-input"
-                 value="${window.location.origin}/streams/${stream.streamId}/output"
-                 readonly
-                 id="url-${stream.streamId}"
-                 onclick="this.select()">
-          <button class="btn-copy" onclick="copyStreamUrl('${stream.streamId}')" title="Copy URL">
-            <i class="copy-icon">📋</i>
-          </button>
-          <button class="btn-open" onclick="openStreamUrl('${stream.streamId}')" title="Open in new tab">
-            <i class="open-icon">↗</i>
-          </button>
-        </div>
+    <div class="detail-section">
+      <h3>Stream URL</h3>
+      <div class="url-container">
+        <input type="text"
+               class="url-input"
+               value="${window.location.origin}/streams/${stream.streamId}/output"
+               readonly
+               id="modal-url-${stream.streamId}"
+               onclick="this.select()">
+        <button class="btn-copy" onclick="copyStreamUrl('${stream.streamId}', 'modal-')" title="Copy URL">
+          📋
+        </button>
+        <button class="btn-open" onclick="openStreamUrl('${stream.streamId}')" title="Open in new tab">
+          ↗
+        </button>
       </div>
+    </div>
 
+    <div class="detail-section">
+      <h3>Live Preview</h3>
       <div class="stream-preview">
         <img src="${API_BASE}/streams/${stream.streamId}/output?t=${Date.now()}"
              alt="${stream.streamId}"
              onerror="this.style.display='none'"
              onload="this.style.display='block'">
       </div>
+    </div>
 
-      <div class="camera-list">
-        <div class="camera-list-title">Camera URLs:</div>
-        ${stream.config.streamUrls.map(url => `
-          <div class="camera-url">${url}</div>
+    <div class="detail-section">
+      <h3>Camera Sources (${stream.config.streamUrls.length})</h3>
+      <div class="camera-sources-list">
+        ${stream.config.streamUrls.map((url, index) => `
+          <div class="camera-source-item">
+            <div class="camera-source-number">#${index + 1}</div>
+            <div class="camera-source-url">${url}</div>
+            <div class="camera-source-status">
+              <span class="status-dot status-unknown" title="Status unknown"></span>
+            </div>
+          </div>
         `).join('')}
       </div>
-
-      <div class="stream-actions">
-        <button class="btn-danger" onclick="deleteStream('${stream.streamId}')">
-          Stop Stream
-        </button>
-      </div>
     </div>
-  `).join('');
+
+    <div class="detail-actions">
+      <button class="btn-danger" onclick="deleteStreamFromModal('${stream.streamId}')">
+        Stop Stream
+      </button>
+    </div>
+  `;
+
+  document.getElementById('streamDetailModal').style.display = 'flex';
 }
 
 // Handle create stream
@@ -294,9 +334,22 @@ function showSuccess(message) {
   setTimeout(() => successDiv.remove(), 5000);
 }
 
+// Close detail modal
+function closeDetailModal(event) {
+  if (!event || event.target === event.currentTarget) {
+    document.getElementById('streamDetailModal').style.display = 'none';
+  }
+}
+
+// Delete stream from modal
+async function deleteStreamFromModal(streamId) {
+  closeDetailModal();
+  await deleteStream(streamId);
+}
+
 // Copy stream URL to clipboard
-function copyStreamUrl(streamId) {
-  const input = document.getElementById(`url-${streamId}`);
+function copyStreamUrl(streamId, prefix = '') {
+  const input = document.getElementById(`${prefix}url-${streamId}`);
   input.select();
   input.setSelectionRange(0, 99999); // For mobile devices
 
@@ -318,4 +371,84 @@ function copyStreamUrl(streamId) {
 function openStreamUrl(streamId) {
   const url = `${window.location.origin}/streams/${streamId}/output`;
   window.open(url, '_blank');
+}
+
+// Check camera health
+async function checkCameraHealth() {
+  const urls = streamUrls
+    .map(input => input.value.trim())
+    .filter(url => url.length > 0);
+
+  if (urls.length === 0) {
+    showError('Please add camera URLs first');
+    return;
+  }
+
+  // Show health check modal
+  document.getElementById('healthCheckModal').style.display = 'flex';
+  const healthCheckBody = document.getElementById('healthCheckBody');
+
+  healthCheckBody.innerHTML = `
+    <p class="text-secondary mb-3">Testing ${urls.length} camera${urls.length > 1 ? 's' : ''}...</p>
+    <div class="health-check-list">
+      ${urls.map((url, index) => `
+        <div class="health-check-item" id="health-${index}">
+          <div class="health-number">#${index + 1}</div>
+          <div class="health-url">${url}</div>
+          <div class="health-status">
+            <div class="spinner-small"></div>
+            <span class="health-text">Testing...</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  // Test each camera
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i];
+    const healthItem = document.getElementById(`health-${i}`);
+    const statusDiv = healthItem.querySelector('.health-status');
+
+    try {
+      // Try to fetch the stream URL
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+      const response = await fetch(url, {
+        method: 'HEAD',
+        signal: controller.signal,
+        mode: 'no-cors' // Allow cross-origin checks
+      });
+
+      clearTimeout(timeoutId);
+
+      // Even with no-cors, if we get here without error, the URL is reachable
+      statusDiv.innerHTML = `
+        <span class="status-dot status-ok"></span>
+        <span class="health-text text-success">Reachable</span>
+      `;
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        statusDiv.innerHTML = `
+          <span class="status-dot status-timeout"></span>
+          <span class="health-text text-warning">Timeout</span>
+        `;
+      } else {
+        // With no-cors, we can't actually verify the response, so we just check if it doesn't error
+        // This is a limitation of browser CORS - in production, backend should handle health checks
+        statusDiv.innerHTML = `
+          <span class="status-dot status-unknown"></span>
+          <span class="health-text text-secondary">Unknown (CORS)</span>
+        `;
+      }
+    }
+  }
+}
+
+// Close health check modal
+function closeHealthCheckModal(event) {
+  if (!event || event.target === event.currentTarget) {
+    document.getElementById('healthCheckModal').style.display = 'none';
+  }
 }
