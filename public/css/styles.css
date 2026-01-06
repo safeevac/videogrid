@@ -1284,3 +1284,125 @@ textarea::placeholder {
 .btn-icon:active {
   transform: scale(0.95);
 }
+
+/* Camera Selector */
+.camera-selector-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+  margin-bottom: 1rem;
+}
+
+.camera-select {
+  flex: 1;
+  min-width: 0;
+}
+
+.selected-cameras-info {
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.selected-cameras-info.complete {
+  background: rgba(109, 177, 76, 0.1);
+  border-color: rgba(109, 177, 76, 0.3);
+  color: var(--primary-color);
+}
+
+.selected-cameras-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.selected-camera-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.selected-camera-position {
+  min-width: 40px;
+}
+
+.position-number {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--primary-color);
+}
+
+.selected-camera-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.selected-camera-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.selected-camera-location {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.selected-camera-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.btn-reorder {
+  padding: 0.4rem 0.6rem;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.75rem;
+  min-width: 28px;
+  transition: all 0.2s;
+}
+
+.btn-reorder:hover:not(:disabled) {
+  background: var(--card-bg);
+  border-color: var(--primary-color);
+}
+
+.btn-reorder:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-remove-small {
+  padding: 0.4rem 0.7rem;
+  background: var(--danger-color);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.btn-remove-small:hover {
+  background: var(--danger-hover);
+}

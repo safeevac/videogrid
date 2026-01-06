@@ -116,8 +116,20 @@
 
           <!-- Camera Library Selection -->
           <div class="form-group" id="cameraLibrarySection">
-            <div class="camera-grid-selector" id="cameraGridSelector">
-              <!-- Will be populated with camera checkboxes -->
+            <label>Add Cameras to Grid</label>
+            <div class="camera-selector-row">
+              <select id="cameraSelect" class="camera-select">
+                <option value="">-- Select a camera --</option>
+              </select>
+              <button type="button" class="btn-secondary" onclick="addSelectedCamera()">
+                + Add to Grid
+              </button>
+            </div>
+            <div class="selected-cameras-info">
+              <span id="selectedCountInfo">0 cameras selected (need <span id="requiredCameraCount">4</span>)</span>
+            </div>
+            <div id="selectedCamerasList" class="selected-cameras-list">
+              <!-- Selected cameras will appear here -->
             </div>
           </div>
 

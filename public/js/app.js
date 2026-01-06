@@ -62,6 +62,13 @@ function updateGridInfo() {
   // Update camera selector
   updateCameraSelector();
 
+  // Trim selected cameras if grid size decreased
+  const gridSize = columns * rows;
+  if (selectedCameraIds.length > gridSize) {
+    selectedCameraIds = selectedCameraIds.slice(0, gridSize);
+    updateSelectedCamerasList();
+  }
+
   // Ensure we have enough URL inputs for manual mode
   while (streamUrls.length < total) {
     addStreamUrlInput();
@@ -775,47 +782,116 @@ function renderCameras() {
   `).join('');
 }
 
-// Update camera selector grid
+// Update camera selector dropdown
 function updateCameraSelector() {
-  const selector = document.getElementById('cameraGridSelector');
+  const cameraSelect = document.getElementById('cameraSelect');
   const gridSize = parseInt(columnsSelect.value) * parseInt(rowsSelect.value);
 
+  // Update required count display
+  document.getElementById('requiredCameraCount').textContent = gridSize;
+
+  if (!cameraSelect) return;
+
   if (cameras.length === 0) {
-    selector.innerHTML = '<p class="text-secondary">No cameras available. Add cameras to the library first.</p>';
+    cameraSelect.innerHTML = '<option value="">No cameras available</option>';
     return;
   }
 
-  selector.innerHTML = `
-    <div class="camera-selector-info">
-      Select ${gridSize} cameras for your ${columnsSelect.value}×${rowsSelect.value} grid:
-    </div>
-    ${cameras.map(camera => `
-      <label class="camera-checkbox-label">
-        <input type="checkbox"
-               class="camera-checkbox"
-               value="${camera.id}"
-               onchange="updateSelectedCameras()"
-               ${selectedCameraIds.includes(camera.id) ? 'checked' : ''}>
-        <div class="camera-checkbox-content">
-          <div class="camera-checkbox-name">${camera.name}</div>
-          ${camera.location ? `<div class="camera-checkbox-location">${camera.location}</div>` : ''}
-        </div>
-      </label>
-    `).join('')}
-  `;
+  cameraSelect.innerHTML = '<option value="">-- Select a camera --</option>' +
+    cameras.map(camera => `
+      <option value="${camera.id}">
+        ${camera.name}${camera.identifier ? ` [${camera.identifier}]` : ''}${camera.location ? ` - ${camera.location}` : ''}
+      </option>
+    `).join('');
+
+  updateSelectedCamerasList();
 }
 
-// Update selected cameras
-function updateSelectedCameras() {
-  const checkboxes = document.querySelectorAll('.camera-checkbox:checked');
-  selectedCameraIds = Array.from(checkboxes).map(cb => cb.value);
+// Add selected camera to list
+function addSelectedCamera() {
+  const cameraSelect = document.getElementById('cameraSelect');
+  const cameraId = cameraSelect.value;
+
+  if (!cameraId) {
+    showError('Please select a camera first');
+    return;
+  }
 
   const gridSize = parseInt(columnsSelect.value) * parseInt(rowsSelect.value);
-  if (selectedCameraIds.length > gridSize) {
-    // Uncheck the last one if too many selected
-    checkboxes[checkboxes.length - 1].checked = false;
-    selectedCameraIds = selectedCameraIds.slice(0, gridSize);
+  if (selectedCameraIds.length >= gridSize) {
+    showError(`Grid is full (${gridSize} cameras max for ${columnsSelect.value}×${rowsSelect.value})`);
+    return;
   }
+
+  // Add camera (can add same camera multiple times)
+  selectedCameraIds.push(cameraId);
+  updateSelectedCamerasList();
+
+  // Reset selector
+  cameraSelect.value = '';
+}
+
+// Remove camera from selected list
+function removeSelectedCamera(index) {
+  selectedCameraIds.splice(index, 1);
+  updateSelectedCamerasList();
+}
+
+// Move camera up in list
+function moveCameraUp(index) {
+  if (index === 0) return;
+  [selectedCameraIds[index - 1], selectedCameraIds[index]] = [selectedCameraIds[index], selectedCameraIds[index - 1]];
+  updateSelectedCamerasList();
+}
+
+// Move camera down in list
+function moveCameraDown(index) {
+  if (index === selectedCameraIds.length - 1) return;
+  [selectedCameraIds[index], selectedCameraIds[index + 1]] = [selectedCameraIds[index + 1], selectedCameraIds[index]];
+  updateSelectedCamerasList();
+}
+
+// Update selected cameras list display
+function updateSelectedCamerasList() {
+  const listContainer = document.getElementById('selectedCamerasList');
+  const gridSize = parseInt(columnsSelect.value) * parseInt(rowsSelect.value);
+  const countInfo = document.getElementById('selectedCountInfo');
+
+  countInfo.textContent = `${selectedCameraIds.length} cameras selected (need ${gridSize})`;
+  countInfo.className = selectedCameraIds.length === gridSize ? 'selected-cameras-info complete' : 'selected-cameras-info';
+
+  if (selectedCameraIds.length === 0) {
+    listContainer.innerHTML = '<p class="text-secondary">No cameras added yet. Select cameras from the dropdown above.</p>';
+    return;
+  }
+
+  listContainer.innerHTML = selectedCameraIds.map((cameraId, index) => {
+    const camera = cameras.find(c => c.id === cameraId);
+    if (!camera) return '';
+
+    return `
+      <div class="selected-camera-item">
+        <div class="selected-camera-position">
+          <span class="position-number">#${index + 1}</span>
+        </div>
+        <div class="selected-camera-info">
+          <div class="selected-camera-name">${camera.name}</div>
+          ${camera.location ? `<div class="selected-camera-location">${camera.location}</div>` : ''}
+        </div>
+        <div class="selected-camera-actions">
+          <button type="button" class="btn-reorder" onclick="moveCameraUp(${index})" ${index === 0 ? 'disabled' : ''} title="Move up">
+            ▲
+          </button>
+          <button type="button" class="btn-reorder" onclick="moveCameraDown(${index})" ${index === selectedCameraIds.length - 1 ? 'disabled' : ''} title="Move down">
+            ▼
+          </button>
+          <button type="button" class="btn-remove-small" onclick="removeSelectedCamera(${index})" title="Remove">
+            ×
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // Toggle camera mode (library vs manual)
