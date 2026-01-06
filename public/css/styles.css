@@ -1199,3 +1199,18 @@ textarea:focus {
 textarea::placeholder {
   color: var(--text-muted);
 }
+
+/* Layout Info Boxes */
+.layout-info-box {
+  padding: 1rem;
+  background: rgba(109, 177, 76, 0.1);
+  border: 1px solid rgba(109, 177, 76, 0.2);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.layout-info-box strong {
+  color: var(--primary-color);
+}

@@ -330,6 +330,7 @@ app.post('/streams', async (req, res) => {
       outputWidth = config.stream.defaultOutputWidth,
       outputHeight = config.stream.defaultOutputHeight,
       framerate = config.stream.defaultFramerate,
+      layout = 'grid',
       saveConfig = false,
       configId = null
     } = req.body;
@@ -357,6 +358,7 @@ app.post('/streams', async (req, res) => {
       outputWidth,
       outputHeight,
       framerate,
+      layout,
       loglevel: config.ffmpeg.loglevel
     };
 
@@ -375,6 +377,7 @@ app.post('/streams', async (req, res) => {
         outputWidth,
         outputHeight,
         framerate,
+        layout,
         autoStart: req.body.autoStart || false
       });
       console.log(`[API] Saved configuration: ${savedConfig.name} (ID: ${savedConfig.id})`);
@@ -457,6 +460,55 @@ app.get('/streams/:streamId', (req, res) => {
   }
 
   res.json(info);
+});
+
+/**
+ * GET /streams/:streamId/status
+ * Get detailed status of stream and all sub-feeds
+ */
+app.get('/streams/:streamId/status', (req, res) => {
+  const { streamId } = req.params;
+  const info = streamManager.getStreamInfo(streamId);
+
+  if (!info) {
+    return res.status(404).json({ error: 'Stream not found' });
+  }
+
+  // Build detailed status for each sub-feed
+  const subFeeds = info.config.streamUrls.map((url, index) => {
+    const cameraStatus = info.cameraStatus[index] || {};
+    return {
+      index: index,
+      identifier: `${streamId}_camera_${index}`,
+      url: url,
+      status: cameraStatus.status || 'unknown',
+      errorCount: cameraStatus.errorCount || 0,
+      lastCheck: cameraStatus.lastCheck,
+      position: {
+        row: Math.floor(index / info.config.columns),
+        column: index % info.config.columns
+      }
+    };
+  });
+
+  res.json({
+    streamId: streamId,
+    outputUrl: `/streams/${streamId}/output`,
+    layout: info.config.layout || 'grid',
+    gridSize: {
+      columns: info.config.columns,
+      rows: info.config.rows
+    },
+    resolution: {
+      width: info.config.outputWidth,
+      height: info.config.outputHeight
+    },
+    framerate: info.config.framerate,
+    health: info.health,
+    subFeeds: subFeeds,
+    clients: info.clients,
+    isReady: info.isReady
+  });
 });
 
 /**

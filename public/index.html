@@ -46,7 +46,16 @@
           </div>
 
           <div class="form-group">
-            <label for="columns">Grid Layout</label>
+            <label for="layoutType">Layout Type</label>
+            <select id="layoutType" onchange="updateLayoutOptions()">
+              <option value="grid">Grid - Equal sized cameras</option>
+              <option value="featured">Featured - One large + thumbnails</option>
+              <option value="pip">Picture-in-Picture - Main + overlay</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="gridLayoutOptions">
+            <label for="columns">Grid Size</label>
             <div class="grid-layout">
               <select id="columns" required>
                 <option value="2">2</option>
@@ -60,6 +69,20 @@
                 <option value="4">4</option>
               </select>
               <span class="grid-info" id="gridInfo">(4 cameras)</span>
+            </div>
+          </div>
+
+          <div class="form-group" id="featuredLayoutInfo" style="display: none;">
+            <div class="layout-info-box">
+              <strong>Featured Layout:</strong> First camera will be large (75% of height),
+              remaining cameras shown as thumbnails in a row at the bottom.
+            </div>
+          </div>
+
+          <div class="form-group" id="pipLayoutInfo" style="display: none;">
+            <div class="layout-info-box">
+              <strong>Picture-in-Picture:</strong> First camera full screen,
+              second camera as small overlay in top-right corner. Only uses 2 cameras.
             </div>
           </div>
 

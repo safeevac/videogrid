@@ -452,6 +452,7 @@ async function handleCreateStream(e) {
   const outputWidth = parseInt(document.getElementById('outputWidth').value);
   const outputHeight = parseInt(document.getElementById('outputHeight').value);
   const framerate = parseInt(document.getElementById('framerate').value);
+  const layout = document.getElementById('layoutType').value;
   const saveConfig = document.getElementById('saveConfig').checked;
   const autoStart = document.getElementById('autoStart').checked;
   const cameraMode = document.querySelector('input[name="cameraMode"]:checked').value;
@@ -496,6 +497,7 @@ async function handleCreateStream(e) {
         outputWidth,
         outputHeight,
         framerate,
+        layout,
         saveConfig,
         autoStart
       })
@@ -911,4 +913,29 @@ function closeCameraModal(event) {
   if (!event || event.target === event.currentTarget) {
     document.getElementById('cameraModal').style.display = 'none';
   }
+}
+
+// Update layout options based on selected type
+function updateLayoutOptions() {
+  const layoutType = document.getElementById('layoutType').value;
+  const gridOptions = document.getElementById('gridLayoutOptions');
+  const featuredInfo = document.getElementById('featuredLayoutInfo');
+  const pipInfo = document.getElementById('pipLayoutInfo');
+
+  // Show/hide appropriate sections
+  if (layoutType === 'grid') {
+    gridOptions.style.display = 'block';
+    featuredInfo.style.display = 'none';
+    pipInfo.style.display = 'none';
+  } else if (layoutType === 'featured') {
+    gridOptions.style.display = 'none';
+    featuredInfo.style.display = 'block';
+    pipInfo.style.display = 'none';
+  } else if (layoutType === 'pip') {
+    gridOptions.style.display = 'none';
+    featuredInfo.style.display = 'none';
+    pipInfo.style.display = 'block';
+  }
+
+  updateCameraSelector();
 }

@@ -3,6 +3,8 @@
  * Based on: https://michalzuber.wordpress.com/2020/05/04/mosaic-grid-view-of-rtsp-streams-with-ffmpeg/
  */
 
+const { buildFeaturedLayout, buildPipLayout } = require('./layoutBuilders');
+
 /**
  * Build FFmpeg arguments for grid layout
  * @param {Object} options - Configuration options
@@ -13,9 +15,37 @@
  * @param {number} options.outputHeight - Output height in pixels
  * @param {number} options.framerate - Output framerate
  * @param {string} options.loglevel - FFmpeg log level
+ * @param {string} options.layout - Layout type: 'grid', 'featured', 'pip'
  * @returns {string[]} Array of FFmpeg arguments
  */
 function buildFFmpegArgs(options) {
+  const {
+    streamUrls,
+    columns,
+    rows,
+    outputWidth,
+    outputHeight,
+    framerate,
+    loglevel,
+    layout = 'grid'
+  } = options;
+
+  // Route to appropriate builder based on layout type
+  switch (layout) {
+    case 'featured':
+      return buildFeaturedLayout(options);
+    case 'pip':
+      return buildPipLayout(options);
+    case 'grid':
+    default:
+      return buildGridLayout(options);
+  }
+}
+
+/**
+ * Build standard equal-sized grid layout
+ */
+function buildGridLayout(options) {
   const {
     streamUrls,
     columns,
@@ -114,7 +144,7 @@ function buildFFmpegArgs(options) {
  * @throws {Error} If configuration is invalid
  */
 function validateStreamConfig(config) {
-  const { streamUrls, columns, rows, outputWidth, outputHeight, framerate } = config;
+  const { streamUrls, columns, rows, outputWidth, outputHeight, framerate, layout = 'grid' } = config;
 
   if (!Array.isArray(streamUrls) || streamUrls.length === 0) {
     throw new Error('streamUrls must be a non-empty array');
@@ -140,9 +170,16 @@ function validateStreamConfig(config) {
     throw new Error('framerate must be an integer between 1 and 60');
   }
 
-  const expectedStreams = columns * rows;
-  if (streamUrls.length < expectedStreams) {
-    throw new Error(`Not enough streams: got ${streamUrls.length}, need ${expectedStreams} for ${columns}x${rows} grid`);
+  // Validate based on layout type
+  if (layout === 'grid') {
+    const expectedStreams = columns * rows;
+    if (streamUrls.length < expectedStreams) {
+      throw new Error(`Not enough streams: got ${streamUrls.length}, need ${expectedStreams} for ${columns}x${rows} grid`);
+    }
+  } else if (layout === 'featured' || layout === 'pip') {
+    if (streamUrls.length < 2) {
+      throw new Error(`${layout} layout requires at least 2 streams`);
+    }
   }
 }
 
