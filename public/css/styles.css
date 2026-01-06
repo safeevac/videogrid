@@ -1244,3 +1244,22 @@ textarea::placeholder {
   color: var(--text-secondary);
   font-style: italic;
 }
+
+/* Camera Identifier Badge */
+.camera-identifier-badge {
+  padding: 0.2rem 0.6rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-family: 'Courier New', monospace;
+  color: var(--text-secondary);
+  margin-left: 0.5rem;
+  font-weight: normal;
+}
+
+.camera-item-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}

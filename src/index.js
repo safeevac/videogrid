@@ -57,7 +57,7 @@ app.get('/cameras/:cameraId', (req, res) => {
  */
 app.post('/cameras', async (req, res) => {
   try {
-    const { name, url, highResUrl, location, notes } = req.body;
+    const { name, identifier, url, highResUrl, location, notes } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: 'name is required' });
@@ -69,6 +69,7 @@ app.post('/cameras', async (req, res) => {
 
     const camera = await cameraStore.set({
       name,
+      identifier: identifier || '',
       url,
       highResUrl: highResUrl || '',
       location: location || '',
@@ -95,11 +96,12 @@ app.put('/cameras/:cameraId', async (req, res) => {
       return res.status(404).json({ error: 'Camera not found' });
     }
 
-    const { name, url, highResUrl, location, notes } = req.body;
+    const { name, identifier, url, highResUrl, location, notes } = req.body;
 
     const updatedCamera = await cameraStore.set({
       ...existingCamera,
       name: name || existingCamera.name,
+      identifier: identifier !== undefined ? identifier : existingCamera.identifier,
       url: url || existingCamera.url,
       highResUrl: highResUrl !== undefined ? highResUrl : existingCamera.highResUrl,
       location: location !== undefined ? location : existingCamera.location,

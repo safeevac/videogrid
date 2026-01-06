@@ -744,7 +744,10 @@ function renderCameras() {
   camerasList.innerHTML = cameras.map(camera => `
     <div class="camera-item">
       <div class="camera-item-header">
-        <div class="camera-item-title">${camera.name}</div>
+        <div class="camera-item-title">
+          ${camera.name}
+          ${camera.identifier ? `<span class="camera-identifier-badge">${camera.identifier}</span>` : ''}
+        </div>
         ${camera.location ? `<div class="camera-item-location">${camera.location}</div>` : ''}
       </div>
       <div class="camera-item-urls">
@@ -846,6 +849,7 @@ function editCamera(cameraId) {
   document.getElementById('cameraModalTitle').textContent = 'Edit Camera';
   document.getElementById('editCameraId').value = camera.id;
   document.getElementById('cameraName').value = camera.name;
+  document.getElementById('cameraIdentifier').value = camera.identifier || '';
   document.getElementById('cameraUrl').value = camera.url;
   document.getElementById('cameraHighResUrl').value = camera.highResUrl || '';
   document.getElementById('cameraLocation').value = camera.location || '';
@@ -859,6 +863,7 @@ async function handleSaveCamera(e) {
 
   const cameraId = document.getElementById('editCameraId').value;
   const name = document.getElementById('cameraName').value;
+  const identifier = document.getElementById('cameraIdentifier').value;
   const url = document.getElementById('cameraUrl').value;
   const highResUrl = document.getElementById('cameraHighResUrl').value;
   const location = document.getElementById('cameraLocation').value;
@@ -876,6 +881,7 @@ async function handleSaveCamera(e) {
       },
       body: JSON.stringify({
         name,
+        identifier,
         url,
         highResUrl,
         location,

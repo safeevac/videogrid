@@ -2,6 +2,7 @@
   {
     "id": "camera_example_1",
     "name": "Lobby Camera 1",
+    "identifier": "76:4D:BD:7D:79:B9",
     "url": "http://camera1.local/stream/video/low",
     "highResUrl": "http://camera1.local/stream/video",
     "location": "Main Lobby - Entrance",

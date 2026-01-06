@@ -224,6 +224,12 @@
             </div>
 
             <div class="form-group">
+              <label for="cameraIdentifier">Identifier (Device ID, MAC, Serial)</label>
+              <input type="text" id="cameraIdentifier" placeholder="e.g., 76:4D:BD:7D:79:B9 or device-123">
+              <small class="form-help">Optional unique identifier for tracking</small>
+            </div>
+
+            <div class="form-group">
               <label for="cameraUrl">Low-Res Stream URL *</label>
               <input type="text" id="cameraUrl" placeholder="http://camera1.local/stream/video/low" required>
               <small class="form-help">Used in grid layouts and thumbnails</small>
