@@ -785,12 +785,14 @@ function renderCameras() {
 // Update camera selector dropdown
 function updateCameraSelector() {
   const cameraSelect = document.getElementById('cameraSelect');
+  const requiredCountElement = document.getElementById('requiredCameraCount');
+
+  if (!cameraSelect || !requiredCountElement) return; // Elements not ready yet
+
   const gridSize = parseInt(columnsSelect.value) * parseInt(rowsSelect.value);
 
   // Update required count display
-  document.getElementById('requiredCameraCount').textContent = gridSize;
-
-  if (!cameraSelect) return;
+  requiredCountElement.textContent = gridSize;
 
   if (cameras.length === 0) {
     cameraSelect.innerHTML = '<option value="">No cameras available</option>';
@@ -854,8 +856,11 @@ function moveCameraDown(index) {
 // Update selected cameras list display
 function updateSelectedCamerasList() {
   const listContainer = document.getElementById('selectedCamerasList');
-  const gridSize = parseInt(columnsSelect.value) * parseInt(rowsSelect.value);
   const countInfo = document.getElementById('selectedCountInfo');
+
+  if (!listContainer || !countInfo) return; // Elements not ready yet
+
+  const gridSize = parseInt(columnsSelect.value) * parseInt(rowsSelect.value);
 
   countInfo.textContent = `${selectedCameraIds.length} cameras selected (need ${gridSize})`;
   countInfo.className = selectedCameraIds.length === gridSize ? 'selected-cameras-info complete' : 'selected-cameras-info';
