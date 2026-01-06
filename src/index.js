@@ -5,6 +5,7 @@ const config = require('./config/default');
 const StreamManager = require('./api/streamManager');
 const { validateStreamConfig } = require('./utils/ffmpegBuilder');
 const configStore = require('./utils/configStore');
+const cameraStore = require('./utils/cameraStore');
 const { checkMultipleCameras } = require('./utils/healthChecker');
 
 const app = express();
@@ -24,6 +25,110 @@ app.get('/health', (req, res) => {
     uptime: process.uptime(),
     streams: streamManager.listStreams().length
   });
+});
+
+/**
+ * GET /cameras
+ * Get all cameras
+ */
+app.get('/cameras', (req, res) => {
+  const cameras = cameraStore.getAll();
+  res.json({ cameras });
+});
+
+/**
+ * GET /cameras/:cameraId
+ * Get a specific camera
+ */
+app.get('/cameras/:cameraId', (req, res) => {
+  const { cameraId } = req.params;
+  const camera = cameraStore.get(cameraId);
+
+  if (!camera) {
+    return res.status(404).json({ error: 'Camera not found' });
+  }
+
+  res.json(camera);
+});
+
+/**
+ * POST /cameras
+ * Add a new camera
+ */
+app.post('/cameras', async (req, res) => {
+  try {
+    const { name, url, location, notes } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: 'name is required' });
+    }
+
+    if (!url) {
+      return res.status(400).json({ error: 'url is required' });
+    }
+
+    const camera = await cameraStore.set({
+      name,
+      url,
+      location: location || '',
+      notes: notes || ''
+    });
+
+    res.status(201).json(camera);
+  } catch (error) {
+    console.error('[API] Error adding camera:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+/**
+ * PUT /cameras/:cameraId
+ * Update a camera
+ */
+app.put('/cameras/:cameraId', async (req, res) => {
+  try {
+    const { cameraId } = req.params;
+    const existingCamera = cameraStore.get(cameraId);
+
+    if (!existingCamera) {
+      return res.status(404).json({ error: 'Camera not found' });
+    }
+
+    const { name, url, location, notes } = req.body;
+
+    const updatedCamera = await cameraStore.set({
+      ...existingCamera,
+      name: name || existingCamera.name,
+      url: url || existingCamera.url,
+      location: location !== undefined ? location : existingCamera.location,
+      notes: notes !== undefined ? notes : existingCamera.notes
+    });
+
+    res.json(updatedCamera);
+  } catch (error) {
+    console.error('[API] Error updating camera:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+/**
+ * DELETE /cameras/:cameraId
+ * Delete a camera
+ */
+app.delete('/cameras/:cameraId', async (req, res) => {
+  try {
+    const { cameraId } = req.params;
+    const deleted = await cameraStore.delete(cameraId);
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Camera not found' });
+    }
+
+    res.json({ message: 'Camera deleted' });
+  } catch (error) {
+    console.error('[API] Error deleting camera:', error);
+    res.status(400).json({ error: error.message });
+  }
 });
 
 /**
@@ -219,6 +324,7 @@ app.post('/streams', async (req, res) => {
     const {
       streamId,
       streamUrls,
+      cameraIds,
       columns = config.stream.defaultGridColumns,
       rows = config.stream.defaultGridRows,
       outputWidth = config.stream.defaultOutputWidth,
@@ -232,12 +338,20 @@ app.post('/streams', async (req, res) => {
       return res.status(400).json({ error: 'streamId is required' });
     }
 
-    if (!streamUrls || !Array.isArray(streamUrls) || streamUrls.length === 0) {
-      return res.status(400).json({ error: 'streamUrls must be a non-empty array' });
+    // Accept either cameraIds (from camera library) or direct streamUrls
+    let finalStreamUrls = streamUrls;
+
+    if (cameraIds && Array.isArray(cameraIds) && cameraIds.length > 0) {
+      const cameras = cameraStore.getByIds(cameraIds);
+      finalStreamUrls = cameras.map(c => c.url);
+    }
+
+    if (!finalStreamUrls || !Array.isArray(finalStreamUrls) || finalStreamUrls.length === 0) {
+      return res.status(400).json({ error: 'streamUrls or cameraIds must be provided' });
     }
 
     const streamConfig = {
-      streamUrls,
+      streamUrls: finalStreamUrls,
       columns,
       rows,
       outputWidth,
@@ -254,7 +368,13 @@ app.post('/streams', async (req, res) => {
       const savedConfig = await configStore.set({
         id: configId || undefined,
         name: streamId,
-        ...streamConfig,
+        streamUrls: finalStreamUrls,
+        cameraIds: cameraIds || [],
+        columns,
+        rows,
+        outputWidth,
+        outputHeight,
+        framerate,
         autoStart: req.body.autoStart || false
       });
       console.log(`[API] Saved configuration: ${savedConfig.name} (ID: ${savedConfig.id})`);
@@ -382,8 +502,9 @@ const server = app.listen(config.server.port, config.server.host, async () => {
   console.log(`Health check: http://localhost:${config.server.port}/health`);
   console.log(`API docs: http://localhost:${config.server.port}/`);
 
-  // Load saved configurations
+  // Load saved data
   await configStore.load();
+  await cameraStore.load();
 
   // Start health monitoring
   streamManager.startHealthMonitoring();

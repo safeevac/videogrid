@@ -5,6 +5,8 @@ const API_BASE = '';
 let streams = [];
 let streamUrls = [];
 let configs = [];
+let cameras = [];
+let selectedCameraIds = [];
 
 // DOM Elements
 const statusIndicator = document.getElementById('statusIndicator');
@@ -23,10 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
   checkServerStatus();
   loadStreams();
   loadConfigs();
+  loadCameras();
 
   // Set up periodic refresh
   setInterval(loadStreams, 5000);
   setInterval(loadConfigs, 10000);
+  setInterval(loadCameras, 15000);
 });
 
 // Form initialization
@@ -55,7 +59,10 @@ function updateGridInfo() {
   const total = columns * rows;
   gridInfo.textContent = `(${total} cameras)`;
 
-  // Ensure we have enough URL inputs
+  // Update camera selector
+  updateCameraSelector();
+
+  // Ensure we have enough URL inputs for manual mode
   while (streamUrls.length < total) {
     addStreamUrlInput();
   }
@@ -447,14 +454,31 @@ async function handleCreateStream(e) {
   const framerate = parseInt(document.getElementById('framerate').value);
   const saveConfig = document.getElementById('saveConfig').checked;
   const autoStart = document.getElementById('autoStart').checked;
+  const cameraMode = document.querySelector('input[name="cameraMode"]:checked').value;
 
-  const urls = streamUrls
-    .map(input => input.value.trim())
-    .filter(url => url.length > 0);
+  let urls = [];
+  let cameraIds = [];
 
-  if (urls.length < columns * rows) {
-    showError(`Please provide at least ${columns * rows} camera URLs`);
-    return;
+  if (cameraMode === 'library') {
+    // Use selected cameras from library
+    cameraIds = selectedCameraIds;
+    const selectedCameras = cameras.filter(c => cameraIds.includes(c.id));
+    urls = selectedCameras.map(c => c.url);
+
+    if (cameraIds.length < columns * rows) {
+      showError(`Please select ${columns * rows} cameras for your ${columns}×${rows} grid`);
+      return;
+    }
+  } else {
+    // Use manual URLs
+    urls = streamUrls
+      .map(input => input.value.trim())
+      .filter(url => url.length > 0);
+
+    if (urls.length < columns * rows) {
+      showError(`Please provide at least ${columns * rows} camera URLs`);
+      return;
+    }
   }
 
   try {
@@ -466,6 +490,7 @@ async function handleCreateStream(e) {
       body: JSON.stringify({
         streamId,
         streamUrls: urls,
+        cameraIds: cameraIds,
         columns,
         rows,
         outputWidth,
@@ -687,4 +712,203 @@ function formatTimeSince(ms) {
   if (ms < 60000) return `${Math.round(ms / 1000)}s ago`;
   if (ms < 3600000) return `${Math.round(ms / 60000)}m ago`;
   return `${Math.round(ms / 3600000)}h ago`;
+}
+
+// ========== Camera Library Functions ==========
+
+// Load cameras
+async function loadCameras() {
+  try {
+    const response = await fetch(`${API_BASE}/cameras`);
+    const data = await response.json();
+
+    cameras = data.cameras || [];
+    renderCameras();
+    updateCameraSelector();
+  } catch (error) {
+    console.error('Error loading cameras:', error);
+  }
+}
+
+// Render camera library list
+function renderCameras() {
+  const camerasList = document.getElementById('camerasList');
+
+  if (cameras.length === 0) {
+    camerasList.innerHTML = '<p class="empty-state">No cameras defined. Click "+ Add Camera" to get started.</p>';
+    return;
+  }
+
+  camerasList.innerHTML = cameras.map(camera => `
+    <div class="camera-item">
+      <div class="camera-item-header">
+        <div class="camera-item-title">${camera.name}</div>
+        ${camera.location ? `<div class="camera-item-location">${camera.location}</div>` : ''}
+      </div>
+      <div class="camera-item-url">${camera.url}</div>
+      ${camera.notes ? `<div class="camera-item-notes">${camera.notes}</div>` : ''}
+      <div class="camera-item-actions">
+        <button class="btn-action" onclick="editCamera('${camera.id}')" title="Edit">
+          ✏️
+        </button>
+        <button class="btn-action btn-danger-action" onclick="deleteCamera('${camera.id}')" title="Delete">
+          🗑
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Update camera selector grid
+function updateCameraSelector() {
+  const selector = document.getElementById('cameraGridSelector');
+  const gridSize = parseInt(columnsSelect.value) * parseInt(rowsSelect.value);
+
+  if (cameras.length === 0) {
+    selector.innerHTML = '<p class="text-secondary">No cameras available. Add cameras to the library first.</p>';
+    return;
+  }
+
+  selector.innerHTML = `
+    <div class="camera-selector-info">
+      Select ${gridSize} cameras for your ${columnsSelect.value}×${rowsSelect.value} grid:
+    </div>
+    ${cameras.map(camera => `
+      <label class="camera-checkbox-label">
+        <input type="checkbox"
+               class="camera-checkbox"
+               value="${camera.id}"
+               onchange="updateSelectedCameras()"
+               ${selectedCameraIds.includes(camera.id) ? 'checked' : ''}>
+        <div class="camera-checkbox-content">
+          <div class="camera-checkbox-name">${camera.name}</div>
+          ${camera.location ? `<div class="camera-checkbox-location">${camera.location}</div>` : ''}
+        </div>
+      </label>
+    `).join('')}
+  `;
+}
+
+// Update selected cameras
+function updateSelectedCameras() {
+  const checkboxes = document.querySelectorAll('.camera-checkbox:checked');
+  selectedCameraIds = Array.from(checkboxes).map(cb => cb.value);
+
+  const gridSize = parseInt(columnsSelect.value) * parseInt(rowsSelect.value);
+  if (selectedCameraIds.length > gridSize) {
+    // Uncheck the last one if too many selected
+    checkboxes[checkboxes.length - 1].checked = false;
+    selectedCameraIds = selectedCameraIds.slice(0, gridSize);
+  }
+}
+
+// Toggle camera mode (library vs manual)
+function toggleCameraMode() {
+  const mode = document.querySelector('input[name="cameraMode"]:checked').value;
+  const librarySection = document.getElementById('cameraLibrarySection');
+  const manualSection = document.getElementById('manualUrlSection');
+
+  if (mode === 'library') {
+    librarySection.style.display = 'block';
+    manualSection.style.display = 'none';
+  } else {
+    librarySection.style.display = 'none';
+    manualSection.style.display = 'block';
+  }
+}
+
+// Show add camera modal
+function showAddCameraModal() {
+  document.getElementById('cameraModalTitle').textContent = 'Add Camera';
+  document.getElementById('cameraForm').reset();
+  document.getElementById('editCameraId').value = '';
+  document.getElementById('cameraModal').style.display = 'flex';
+}
+
+// Edit camera
+function editCamera(cameraId) {
+  const camera = cameras.find(c => c.id === cameraId);
+  if (!camera) return;
+
+  document.getElementById('cameraModalTitle').textContent = 'Edit Camera';
+  document.getElementById('editCameraId').value = camera.id;
+  document.getElementById('cameraName').value = camera.name;
+  document.getElementById('cameraUrl').value = camera.url;
+  document.getElementById('cameraLocation').value = camera.location || '';
+  document.getElementById('cameraNotes').value = camera.notes || '';
+  document.getElementById('cameraModal').style.display = 'flex';
+}
+
+// Handle save camera
+async function handleSaveCamera(e) {
+  e.preventDefault();
+
+  const cameraId = document.getElementById('editCameraId').value;
+  const name = document.getElementById('cameraName').value;
+  const url = document.getElementById('cameraUrl').value;
+  const location = document.getElementById('cameraLocation').value;
+  const notes = document.getElementById('cameraNotes').value;
+
+  try {
+    const isEdit = !!cameraId;
+    const endpoint = isEdit ? `${API_BASE}/cameras/${cameraId}` : `${API_BASE}/cameras`;
+    const method = isEdit ? 'PUT' : 'POST';
+
+    const response = await fetch(endpoint, {
+      method,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name,
+        url,
+        location,
+        notes
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to save camera');
+    }
+
+    showSuccess(`Camera ${isEdit ? 'updated' : 'added'} successfully!`);
+    closeCameraModal();
+    loadCameras();
+  } catch (error) {
+    showError(error.message);
+  }
+}
+
+// Delete camera
+async function deleteCamera(cameraId) {
+  const camera = cameras.find(c => c.id === cameraId);
+  if (!camera) return;
+
+  if (!confirm(`Delete camera "${camera.name}"?`)) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/cameras/${cameraId}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete camera');
+    }
+
+    showSuccess('Camera deleted!');
+    loadCameras();
+  } catch (error) {
+    showError(error.message);
+  }
+}
+
+// Close camera modal
+function closeCameraModal(event) {
+  if (!event || event.target === event.currentTarget) {
+    document.getElementById('cameraModal').style.display = 'none';
+  }
 }

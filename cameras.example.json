@@ -1,0 +1,29 @@
+[
+  {
+    "id": "camera_example_1",
+    "name": "Lobby Camera 1",
+    "url": "http://camera1.local/stream",
+    "location": "Main Lobby - Entrance",
+    "notes": "Front entrance view, 1080p",
+    "createdAt": "2026-01-06T12:00:00.000Z",
+    "updatedAt": "2026-01-06T12:00:00.000Z"
+  },
+  {
+    "id": "camera_example_2",
+    "name": "Lobby Camera 2",
+    "url": "http://camera2.local/stream",
+    "location": "Main Lobby - Exit",
+    "notes": "Rear exit view, 1080p",
+    "createdAt": "2026-01-06T12:00:00.000Z",
+    "updatedAt": "2026-01-06T12:00:00.000Z"
+  },
+  {
+    "id": "camera_example_3",
+    "name": "Parking Lot Camera",
+    "url": "http://camera3.local/stream",
+    "location": "Parking Lot - North",
+    "notes": "Wide angle view of north parking area",
+    "createdAt": "2026-01-06T12:00:00.000Z",
+    "updatedAt": "2026-01-06T12:00:00.000Z"
+  }
+]

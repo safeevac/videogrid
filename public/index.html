@@ -18,6 +18,24 @@
     </header>
 
     <main>
+      <!-- Camera Library Section -->
+      <section class="card">
+        <div class="section-header">
+          <h2>Camera Library</h2>
+          <div class="header-actions">
+            <button type="button" class="btn-secondary btn-small" onclick="loadCameras()">
+              🔄 Refresh
+            </button>
+            <button type="button" class="btn-primary btn-small" onclick="showAddCameraModal()">
+              + Add Camera
+            </button>
+          </div>
+        </div>
+        <div id="camerasList">
+          <p class="empty-state">No cameras defined</p>
+        </div>
+      </section>
+
       <!-- Create Stream Section -->
       <section class="card">
         <h2>Create New Stream</h2>
@@ -60,6 +78,28 @@
           </div>
 
           <div class="form-group">
+            <label>Select Cameras</label>
+            <div class="camera-selection-mode">
+              <label class="radio-label">
+                <input type="radio" name="cameraMode" value="library" checked onchange="toggleCameraMode()">
+                From Library
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="cameraMode" value="manual" onchange="toggleCameraMode()">
+                Manual URLs
+              </label>
+            </div>
+          </div>
+
+          <!-- Camera Library Selection -->
+          <div class="form-group" id="cameraLibrarySection">
+            <div class="camera-grid-selector" id="cameraGridSelector">
+              <!-- Will be populated with camera checkboxes -->
+            </div>
+          </div>
+
+          <!-- Manual URL Entry -->
+          <div class="form-group" id="manualUrlSection" style="display: none;">
             <div class="form-label-row">
               <label>Camera Stream URLs</label>
               <button type="button" class="btn-secondary btn-small" onclick="checkCameraHealth()">
@@ -140,6 +180,46 @@
         </div>
         <div id="healthCheckBody" class="modal-body">
           <p class="text-secondary">Testing camera connections...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add/Edit Camera Modal -->
+    <div id="cameraModal" class="modal" onclick="closeCameraModal(event)">
+      <div class="modal-content modal-small" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h2 id="cameraModalTitle">Add Camera</h2>
+          <button class="modal-close" onclick="closeCameraModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="cameraForm" onsubmit="handleSaveCamera(event)">
+            <input type="hidden" id="editCameraId">
+
+            <div class="form-group">
+              <label for="cameraName">Camera Name *</label>
+              <input type="text" id="cameraName" placeholder="e.g., Lobby Camera 1" required>
+            </div>
+
+            <div class="form-group">
+              <label for="cameraUrl">Stream URL *</label>
+              <input type="text" id="cameraUrl" placeholder="http://camera1.local/stream" required>
+            </div>
+
+            <div class="form-group">
+              <label for="cameraLocation">Location</label>
+              <input type="text" id="cameraLocation" placeholder="e.g., Main Lobby - Entrance">
+            </div>
+
+            <div class="form-group">
+              <label for="cameraNotes">Notes</label>
+              <textarea id="cameraNotes" rows="3" placeholder="Additional notes about this camera"></textarea>
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" onclick="closeCameraModal()">Cancel</button>
+              <button type="submit" class="btn-primary">Save Camera</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
