@@ -389,28 +389,28 @@ const server = app.listen(config.server.port, config.server.host, async () => {
   streamManager.startHealthMonitoring();
 
   // Auto-start streams if configured
-  const configs = configStore.getAll();
-  const autoStartConfigs = configs.filter(c => c.autoStart);
+  const savedConfigs = configStore.getAll();
+  const autoStartConfigs = savedConfigs.filter(c => c.autoStart);
 
   if (autoStartConfigs.length > 0) {
     console.log(`[AutoStart] Starting ${autoStartConfigs.length} configured streams...`);
 
-    for (const config of autoStartConfigs) {
+    for (const savedConfig of autoStartConfigs) {
       try {
         const streamConfig = {
-          streamUrls: config.streamUrls,
-          columns: config.columns,
-          rows: config.rows,
-          outputWidth: config.outputWidth,
-          outputHeight: config.outputHeight,
-          framerate: config.framerate,
+          streamUrls: savedConfig.streamUrls,
+          columns: savedConfig.columns,
+          rows: savedConfig.rows,
+          outputWidth: savedConfig.outputWidth,
+          outputHeight: savedConfig.outputHeight,
+          framerate: savedConfig.framerate,
           loglevel: config.ffmpeg.loglevel
         };
 
-        await streamManager.createStream(config.name, streamConfig);
-        console.log(`[AutoStart] Started stream: ${config.name}`);
+        await streamManager.createStream(savedConfig.name, streamConfig);
+        console.log(`[AutoStart] Started stream: ${savedConfig.name}`);
       } catch (error) {
-        console.error(`[AutoStart] Failed to start stream ${config.name}:`, error.message);
+        console.error(`[AutoStart] Failed to start stream ${savedConfig.name}:`, error.message);
       }
     }
   }
