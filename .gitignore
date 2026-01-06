@@ -5,6 +5,9 @@ node_modules/
 .env
 .env.local
 
+# Configuration files
+configs.json
+
 # Logs
 logs/
 *.log

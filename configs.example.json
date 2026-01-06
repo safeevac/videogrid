@@ -1,0 +1,38 @@
+[
+  {
+    "id": "config_example_1",
+    "name": "lobby-cameras",
+    "streamUrls": [
+      "http://camera1.local/stream",
+      "http://camera2.local/stream",
+      "http://camera3.local/stream",
+      "http://camera4.local/stream"
+    ],
+    "columns": 2,
+    "rows": 2,
+    "outputWidth": 1920,
+    "outputHeight": 1080,
+    "framerate": 15,
+    "autoStart": false,
+    "savedAt": "2026-01-06T12:00:00.000Z"
+  },
+  {
+    "id": "config_example_2",
+    "name": "parking-lot",
+    "streamUrls": [
+      "http://camera5.local/stream",
+      "http://camera6.local/stream",
+      "http://camera7.local/stream",
+      "http://camera8.local/stream",
+      "http://camera9.local/stream",
+      "http://camera10.local/stream"
+    ],
+    "columns": 3,
+    "rows": 2,
+    "outputWidth": 1920,
+    "outputHeight": 1080,
+    "framerate": 12,
+    "autoStart": true,
+    "savedAt": "2026-01-06T12:05:00.000Z"
+  }
+]

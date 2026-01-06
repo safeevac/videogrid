@@ -276,3 +276,89 @@ ISC
 ## Credits
 
 FFmpeg grid layout approach based on: https://michalzuber.wordpress.com/2020/05/04/mosaic-grid-view-of-rtsp-streams-with-ffmpeg/
+
+## Persistent Configuration
+
+VideoGrid supports saving stream configurations to avoid re-entering camera URLs.
+
+### Configuration File
+
+Configurations are stored in `configs.json` (auto-created, git-ignored).
+
+**Example** (`configs.example.json`):
+```json
+[
+  {
+    "id": "config_example_1",
+    "name": "lobby-cameras",
+    "streamUrls": ["http://camera1.local/stream", ...],
+    "columns": 2,
+    "rows": 2,
+    "outputWidth": 1920,
+    "outputHeight": 1080,
+    "framerate": 15,
+    "autoStart": false
+  }
+]
+```
+
+### API Endpoints
+
+#### Get All Configurations
+```bash
+GET /configs
+```
+
+#### Save a Configuration
+```bash
+POST /configs
+Content-Type: application/json
+
+{
+  "name": "lobby-cameras",
+  "streamUrls": ["http://camera1/stream", ...],
+  "columns": 2,
+  "rows": 2,
+  "autoStart": false
+}
+```
+
+#### Start Stream from Saved Config
+```bash
+POST /streams/from-config/:configId
+Content-Type: application/json
+
+{
+  "streamId": "lobby-grid"  // Optional, defaults to config name
+}
+```
+
+#### Update Configuration
+```bash
+PUT /configs/:configId
+```
+
+#### Delete Configuration
+```bash
+DELETE /configs/:configId
+```
+
+### Auto-Start on Boot
+
+Set `autoStart: true` in a configuration to automatically start that stream when VideoGrid starts:
+
+```json
+{
+  "name": "monitoring-grid",
+  "autoStart": true,
+  ...
+}
+```
+
+### Workflow
+
+1. **Create and Save**: When creating a stream, check "Save Configuration"
+2. **Reuse**: Next time, load from saved config instead of re-entering URLs
+3. **Auto-Start**: Mark important streams to start on boot
+4. **Manage**: Edit, delete, or duplicate configurations as needed
+
