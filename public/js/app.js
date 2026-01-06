@@ -429,45 +429,56 @@ async function checkCameraHealth() {
     </div>
   `;
 
-  // Test each camera
-  for (let i = 0; i < urls.length; i++) {
-    const url = urls[i];
-    const healthItem = document.getElementById(`health-${i}`);
-    const statusDiv = healthItem.querySelector('.health-status');
+  try {
+    // Call backend health check API
+    const response = await fetch(`${API_BASE}/health-check`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        urls: urls,
+        timeout: 5000
+      })
+    });
 
-    try {
-      // Try to fetch the stream URL
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    if (!response.ok) {
+      throw new Error('Health check request failed');
+    }
 
-      const response = await fetch(url, {
-        method: 'HEAD',
-        signal: controller.signal,
-        mode: 'no-cors' // Allow cross-origin checks
-      });
+    const data = await response.json();
 
-      clearTimeout(timeoutId);
+    // Update UI with results
+    data.results.forEach((result, index) => {
+      const healthItem = document.getElementById(`health-${index}`);
+      if (!healthItem) return;
 
-      // Even with no-cors, if we get here without error, the URL is reachable
-      statusDiv.innerHTML = `
-        <span class="status-dot status-ok"></span>
-        <span class="health-text text-success">Reachable</span>
-      `;
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        statusDiv.innerHTML = `
+      const statusDiv = healthItem.querySelector('.health-status');
+
+      let statusHtml;
+      if (result.status === 'ok') {
+        statusHtml = `
+          <span class="status-dot status-ok"></span>
+          <span class="health-text text-success">OK (${result.responseTime}ms)</span>
+        `;
+      } else if (result.status === 'timeout') {
+        statusHtml = `
           <span class="status-dot status-timeout"></span>
           <span class="health-text text-warning">Timeout</span>
         `;
       } else {
-        // With no-cors, we can't actually verify the response, so we just check if it doesn't error
-        // This is a limitation of browser CORS - in production, backend should handle health checks
-        statusDiv.innerHTML = `
-          <span class="status-dot status-unknown"></span>
-          <span class="health-text text-secondary">Unknown (CORS)</span>
+        statusHtml = `
+          <span class="status-dot status-error"></span>
+          <span class="health-text text-danger">${result.statusMessage || 'Error'}</span>
         `;
       }
-    }
+
+      statusDiv.innerHTML = statusHtml;
+    });
+  } catch (error) {
+    console.error('Health check failed:', error);
+    showError('Failed to check camera health. Please try again.');
+    closeHealthCheckModal();
   }
 }
 

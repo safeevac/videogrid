@@ -892,6 +892,10 @@ footer {
   color: #f59e0b;
 }
 
+.text-danger {
+  color: var(--danger-color);
+}
+
 .text-secondary {
   color: var(--text-secondary);
 }

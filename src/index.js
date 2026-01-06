@@ -5,6 +5,7 @@ const config = require('./config/default');
 const StreamManager = require('./api/streamManager');
 const { validateStreamConfig } = require('./utils/ffmpegBuilder');
 const configStore = require('./utils/configStore');
+const { checkMultipleCameras } = require('./utils/healthChecker');
 
 const app = express();
 const streamManager = new StreamManager();
@@ -23,6 +24,30 @@ app.get('/health', (req, res) => {
     uptime: process.uptime(),
     streams: streamManager.listStreams().length
   });
+});
+
+/**
+ * POST /health-check
+ * Check health of camera URLs
+ */
+app.post('/health-check', async (req, res) => {
+  try {
+    const { urls, timeout = 5000 } = req.body;
+
+    if (!urls || !Array.isArray(urls) || urls.length === 0) {
+      return res.status(400).json({ error: 'urls must be a non-empty array' });
+    }
+
+    if (urls.length > 20) {
+      return res.status(400).json({ error: 'Maximum 20 URLs per request' });
+    }
+
+    const results = await checkMultipleCameras(urls, timeout);
+    res.json({ results });
+  } catch (error) {
+    console.error('[API] Error checking camera health:', error);
+    res.status(500).json({ error: 'Health check failed' });
+  }
 });
 
 /**
