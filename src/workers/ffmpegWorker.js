@@ -36,7 +36,18 @@ function startFFmpeg(config) {
     });
 
     // Handle stdout (MJPEG stream data)
+    let totalBytes = 0;
+    let frameCount = 0;
+
     ffmpegProcess.stdout.on('data', (data) => {
+      totalBytes += data.length;
+      frameCount++;
+
+      // Log first few frames for debugging
+      if (frameCount <= 3) {
+        console.log(`[Worker] Received frame ${frameCount}, size: ${data.length} bytes, total: ${totalBytes} bytes`);
+      }
+
       parentPort.postMessage({
         type: 'data',
         data: data
@@ -46,6 +57,12 @@ function startFFmpeg(config) {
     // Handle stderr (FFmpeg logs)
     ffmpegProcess.stderr.on('data', (data) => {
       const message = data.toString();
+
+      // Log errors to console immediately
+      if (message.toLowerCase().includes('error')) {
+        console.error('[Worker] FFmpeg Error:', message.trim());
+      }
+
       parentPort.postMessage({
         type: 'log',
         message: message
