@@ -38,20 +38,55 @@ function startFFmpeg(config) {
     // Handle stdout (MJPEG stream data)
     let totalBytes = 0;
     let frameCount = 0;
+    let buffer = Buffer.alloc(0);
 
-    ffmpegProcess.stdout.on('data', (data) => {
-      totalBytes += data.length;
-      frameCount++;
+    ffmpegProcess.stdout.on('data', (chunk) => {
+      totalBytes += chunk.length;
+      buffer = Buffer.concat([buffer, chunk]);
 
-      // Log first few frames for debugging
-      if (frameCount <= 3) {
-        console.log(`[Worker] Received frame ${frameCount}, size: ${data.length} bytes, total: ${totalBytes} bytes`);
+      // Look for JPEG markers (FFI D8 = start, FF D9 = end)
+      let startIndex = 0;
+
+      while (startIndex < buffer.length) {
+        // Find JPEG start marker (0xFF 0xD8)
+        const jpegStart = buffer.indexOf(Buffer.from([0xFF, 0xD8]), startIndex);
+        if (jpegStart === -1) break;
+
+        // Find JPEG end marker (0xFF 0xD9)
+        const jpegEnd = buffer.indexOf(Buffer.from([0xFF, 0xD9]), jpegStart + 2);
+        if (jpegEnd === -1) break; // Incomplete frame, wait for more data
+
+        // Extract complete JPEG frame
+        const frameData = buffer.slice(jpegStart, jpegEnd + 2);
+        frameCount++;
+
+        // Log first few frames
+        if (frameCount <= 3) {
+          console.log(`[Worker] Received frame ${frameCount}, size: ${frameData.length} bytes`);
+        }
+
+        // Send frame with multipart boundaries
+        const boundary = '--jpgboundary\r\n';
+        const header = `Content-Type: image/jpeg\r\nContent-Length: ${frameData.length}\r\n\r\n`;
+        const frameWithBoundary = Buffer.concat([
+          Buffer.from(boundary),
+          Buffer.from(header),
+          frameData,
+          Buffer.from('\r\n')
+        ]);
+
+        parentPort.postMessage({
+          type: 'data',
+          data: frameWithBoundary
+        });
+
+        startIndex = jpegEnd + 2;
       }
 
-      parentPort.postMessage({
-        type: 'data',
-        data: data
-      });
+      // Keep remaining incomplete data in buffer
+      if (startIndex > 0) {
+        buffer = buffer.slice(startIndex);
+      }
     });
 
     // Handle stderr (FFmpeg logs)
