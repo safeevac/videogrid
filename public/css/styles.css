@@ -803,6 +803,43 @@ footer {
   background: rgba(255, 255, 255, 0.3);
 }
 
+.status-error {
+  background: var(--danger-color);
+  box-shadow: 0 0 8px rgba(220, 38, 38, 0.5);
+}
+
+.status-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.health-summary {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.health-stat {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.health-label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.health-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
 /* Health Check Modal */
 .health-check-list {
   display: flex;

@@ -359,6 +359,9 @@ const server = app.listen(config.server.port, config.server.host, async () => {
   // Load saved configurations
   await configStore.load();
 
+  // Start health monitoring
+  streamManager.startHealthMonitoring();
+
   // Auto-start streams if configured
   const configs = configStore.getAll();
   const autoStartConfigs = configs.filter(c => c.autoStart);

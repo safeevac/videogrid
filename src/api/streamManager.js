@@ -30,8 +30,21 @@ class StreamManager extends EventEmitter {
       clients: new Set(),
       buffer: [], // Buffer to store recent frames for new clients
       maxBufferSize: 10,
-      isReady: false
+      isReady: false,
+      cameraStatus: {}, // Track individual camera health
+      lastFrameTime: Date.now(),
+      frameCount: 0
     };
+
+    // Initialize camera status tracking
+    config.streamUrls.forEach((url, index) => {
+      streamData.cameraStatus[index] = {
+        url: url,
+        status: 'unknown', // unknown, ok, timeout, error
+        lastCheck: null,
+        errorCount: 0
+      };
+    });
 
     this.streams.set(streamId, streamData);
 
@@ -77,6 +90,10 @@ class StreamManager extends EventEmitter {
         break;
 
       case 'data':
+        // Update frame tracking
+        stream.lastFrameTime = Date.now();
+        stream.frameCount++;
+
         // Store frame in buffer
         stream.buffer.push(message.data);
         if (stream.buffer.length > stream.maxBufferSize) {
@@ -92,6 +109,20 @@ class StreamManager extends EventEmitter {
             stream.clients.delete(client);
           }
         });
+        break;
+
+      case 'camera-status':
+        // Update camera status from FFmpeg monitoring
+        if (message.cameraIndex !== undefined && message.status) {
+          const cameraStatus = stream.cameraStatus[message.cameraIndex];
+          if (cameraStatus) {
+            cameraStatus.status = message.status;
+            cameraStatus.lastCheck = Date.now();
+            if (message.status === 'error' || message.status === 'timeout') {
+              cameraStatus.errorCount++;
+            }
+          }
+        }
         break;
 
       case 'log':
@@ -187,11 +218,24 @@ class StreamManager extends EventEmitter {
       return null;
     }
 
+    // Calculate stream health
+    const timeSinceLastFrame = Date.now() - stream.lastFrameTime;
+    const isStale = timeSinceLastFrame > 10000; // 10 seconds
+
     return {
       streamId,
       config: stream.config,
       clients: stream.clients.size,
-      isReady: stream.isReady
+      isReady: stream.isReady,
+      cameraStatus: stream.cameraStatus,
+      health: {
+        lastFrameTime: stream.lastFrameTime,
+        timeSinceLastFrame,
+        isStale,
+        frameCount: stream.frameCount,
+        totalCameras: stream.config.streamUrls.length,
+        healthyCameras: Object.values(stream.cameraStatus).filter(c => c.status === 'ok').length
+      }
     };
   }
 
@@ -205,6 +249,39 @@ class StreamManager extends EventEmitter {
       streams.push(this.getStreamInfo(streamId));
     });
     return streams;
+  }
+
+  /**
+   * Monitor stream health
+   */
+  startHealthMonitoring() {
+    // Check all streams every 5 seconds
+    setInterval(() => {
+      this.streams.forEach((stream, streamId) => {
+        const timeSinceLastFrame = Date.now() - stream.lastFrameTime;
+
+        // Mark stream as stale if no frames in 10 seconds
+        if (timeSinceLastFrame > 10000 && stream.isReady) {
+          console.warn(`[StreamManager] Stream ${streamId} appears stale (${Math.round(timeSinceLastFrame / 1000)}s since last frame)`);
+
+          // Mark all cameras as timeout if stream is stale
+          Object.keys(stream.cameraStatus).forEach(index => {
+            if (stream.cameraStatus[index].status !== 'error') {
+              stream.cameraStatus[index].status = 'timeout';
+              stream.cameraStatus[index].lastCheck = Date.now();
+            }
+          });
+        } else if (stream.isReady) {
+          // Stream is healthy, mark cameras as OK
+          Object.keys(stream.cameraStatus).forEach(index => {
+            if (stream.cameraStatus[index].status === 'timeout') {
+              stream.cameraStatus[index].status = 'ok';
+              stream.cameraStatus[index].lastCheck = Date.now();
+            }
+          });
+        }
+      });
+    }, 5000);
   }
 
   /**

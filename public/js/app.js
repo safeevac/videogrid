@@ -206,16 +206,41 @@ function showStreamDetail(streamId) {
 
     <div class="detail-section">
       <h3>Camera Sources (${stream.config.streamUrls.length})</h3>
+      ${stream.health ? `
+        <div class="health-summary">
+          <span class="health-stat">
+            <span class="health-label">Healthy:</span>
+            <span class="health-value">${stream.health.healthyCameras}/${stream.health.totalCameras}</span>
+          </span>
+          <span class="health-stat">
+            <span class="health-label">Frames:</span>
+            <span class="health-value">${stream.health.frameCount}</span>
+          </span>
+          <span class="health-stat">
+            <span class="health-label">Last Frame:</span>
+            <span class="health-value">${formatTimeSince(stream.health.timeSinceLastFrame)}</span>
+          </span>
+        </div>
+      ` : ''}
       <div class="camera-sources-list">
-        ${stream.config.streamUrls.map((url, index) => `
-          <div class="camera-source-item">
-            <div class="camera-source-number">#${index + 1}</div>
-            <div class="camera-source-url">${url}</div>
-            <div class="camera-source-status">
-              <span class="status-dot status-unknown" title="Status unknown"></span>
+        ${stream.config.streamUrls.map((url, index) => {
+          const cameraStatus = stream.cameraStatus && stream.cameraStatus[index]
+            ? stream.cameraStatus[index]
+            : { status: 'unknown' };
+          const statusClass = `status-${cameraStatus.status}`;
+          const statusText = cameraStatus.status.charAt(0).toUpperCase() + cameraStatus.status.slice(1);
+
+          return `
+            <div class="camera-source-item">
+              <div class="camera-source-number">#${index + 1}</div>
+              <div class="camera-source-url">${url}</div>
+              <div class="camera-source-status">
+                <span class="status-dot ${statusClass}" title="${statusText}"></span>
+                <span class="status-text">${statusText}</span>
+              </div>
             </div>
-          </div>
-        `).join('')}
+          `;
+        }).join('')}
       </div>
     </div>
 
@@ -451,4 +476,12 @@ function closeHealthCheckModal(event) {
   if (!event || event.target === event.currentTarget) {
     document.getElementById('healthCheckModal').style.display = 'none';
   }
+}
+
+// Format time since in human readable format
+function formatTimeSince(ms) {
+  if (ms < 1000) return 'just now';
+  if (ms < 60000) return `${Math.round(ms / 1000)}s ago`;
+  if (ms < 3600000) return `${Math.round(ms / 60000)}m ago`;
+  return `${Math.round(ms / 3600000)}h ago`;
 }
