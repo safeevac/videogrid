@@ -299,6 +299,81 @@ input::placeholder {
   font-weight: 500;
 }
 
+.stream-url-display {
+  margin: 1rem 0;
+}
+
+.url-label {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.url-container {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.url-input {
+  flex: 1;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--primary-color);
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.url-input:hover,
+.url-input:focus {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.url-input::selection {
+  background: rgba(109, 177, 76, 0.3);
+}
+
+.btn-copy,
+.btn-open {
+  padding: 0.75rem 1rem;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+}
+
+.btn-copy:hover,
+.btn-open:hover {
+  background: var(--card-bg);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+.btn-copy:active,
+.btn-open:active {
+  transform: translateY(0);
+}
+
+.copy-icon,
+.open-icon {
+  font-size: 1.2rem;
+  font-style: normal;
+}
+
 .stream-preview {
   margin: 1rem 0;
   border-radius: 8px;

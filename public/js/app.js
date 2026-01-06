@@ -148,6 +148,24 @@ function renderStreams() {
         </div>
       </div>
 
+      <div class="stream-url-display">
+        <div class="url-label">Stream URL:</div>
+        <div class="url-container">
+          <input type="text"
+                 class="url-input"
+                 value="${window.location.origin}/streams/${stream.streamId}/output"
+                 readonly
+                 id="url-${stream.streamId}"
+                 onclick="this.select()">
+          <button class="btn-copy" onclick="copyStreamUrl('${stream.streamId}')" title="Copy URL">
+            <i class="copy-icon">📋</i>
+          </button>
+          <button class="btn-open" onclick="openStreamUrl('${stream.streamId}')" title="Open in new tab">
+            <i class="open-icon">↗</i>
+          </button>
+        </div>
+      </div>
+
       <div class="stream-preview">
         <img src="${API_BASE}/streams/${stream.streamId}/output?t=${Date.now()}"
              alt="${stream.streamId}"
@@ -274,4 +292,30 @@ function showSuccess(message) {
   form.insertBefore(successDiv, form.firstChild);
 
   setTimeout(() => successDiv.remove(), 5000);
+}
+
+// Copy stream URL to clipboard
+function copyStreamUrl(streamId) {
+  const input = document.getElementById(`url-${streamId}`);
+  input.select();
+  input.setSelectionRange(0, 99999); // For mobile devices
+
+  try {
+    navigator.clipboard.writeText(input.value).then(() => {
+      showSuccess(`Stream URL copied to clipboard!`);
+    }).catch(() => {
+      // Fallback for older browsers
+      document.execCommand('copy');
+      showSuccess(`Stream URL copied to clipboard!`);
+    });
+  } catch (error) {
+    console.error('Failed to copy:', error);
+    showError('Failed to copy URL to clipboard');
+  }
+}
+
+// Open stream URL in new tab
+function openStreamUrl(streamId) {
+  const url = `${window.location.origin}/streams/${streamId}/output`;
+  window.open(url, '_blank');
 }
