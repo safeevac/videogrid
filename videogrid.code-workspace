@@ -1,0 +1,83 @@
+{
+  "folders": [
+    {
+      "name": "VideoGrid",
+      "path": "."
+    },
+    {
+      "name": "SafeEVAC Monorepo",
+      "path": "../monorepo"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/.git": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/package-lock.json": true
+    }
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Launch VideoGrid",
+        "skipFiles": ["<node_internals>/**"],
+        "program": "${workspaceFolder:VideoGrid}/src/index.js",
+        "cwd": "${workspaceFolder:VideoGrid}",
+        "env": {
+          "NODE_ENV": "development",
+          "PORT": "4003"
+        },
+        "console": "integratedTerminal"
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Launch VideoGrid (watch)",
+        "skipFiles": ["<node_internals>/**"],
+        "runtimeExecutable": "nodemon",
+        "runtimeArgs": ["--inspect"],
+        "program": "${workspaceFolder:VideoGrid}/src/index.js",
+        "cwd": "${workspaceFolder:VideoGrid}",
+        "env": {
+          "NODE_ENV": "development",
+          "PORT": "4003"
+        },
+        "console": "integratedTerminal",
+        "restart": true
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Start VideoGrid",
+        "type": "npm",
+        "script": "start",
+        "path": ".",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        }
+      },
+      {
+        "label": "Start VideoGrid (dev)",
+        "type": "npm",
+        "script": "dev",
+        "path": ".",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        }
+      }
+    ]
+  }
+}
