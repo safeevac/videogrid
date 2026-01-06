@@ -1,0 +1,33 @@
+{
+  "name": "videogrid",
+  "version": "1.0.0",
+  "description": "MJPEG stream multiplexer that combines multiple camera streams into a grid layout using FFmpeg",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mjpeg",
+    "ffmpeg",
+    "video",
+    "grid",
+    "stream",
+    "camera"
+  ],
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}

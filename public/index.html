@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VideoGrid - MJPEG Stream Multiplexer</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎬 VideoGrid</h1>
+      <p class="subtitle">MJPEG Stream Multiplexer</p>
+      <div class="status">
+        <span class="status-indicator" id="statusIndicator"></span>
+        <span id="statusText">Connecting...</span>
+      </div>
+    </header>
+
+    <main>
+      <!-- Create Stream Section -->
+      <section class="card">
+        <h2>Create New Stream</h2>
+        <form id="createStreamForm">
+          <div class="form-group">
+            <label for="streamId">Stream ID</label>
+            <input type="text" id="streamId" placeholder="e.g., lobby-grid" required>
+          </div>
+
+          <div class="form-group">
+            <label for="columns">Grid Layout</label>
+            <div class="grid-layout">
+              <select id="columns" required>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+              <span>×</span>
+              <select id="rows" required>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+              <span class="grid-info" id="gridInfo">(4 cameras)</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="outputWidth">Output Resolution</label>
+            <div class="resolution">
+              <input type="number" id="outputWidth" value="1920" min="640" step="160" required>
+              <span>×</span>
+              <input type="number" id="outputHeight" value="1080" min="480" step="90" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="framerate">Framerate (fps)</label>
+            <input type="number" id="framerate" value="15" min="1" max="30" required>
+          </div>
+
+          <div class="form-group">
+            <label>Camera Stream URLs</label>
+            <div id="streamUrls">
+              <!-- Dynamic stream URL inputs will be added here -->
+            </div>
+            <button type="button" id="addUrlBtn" class="btn-secondary">+ Add URL</button>
+          </div>
+
+          <button type="submit" class="btn-primary">Create Stream</button>
+        </form>
+      </section>
+
+      <!-- Active Streams Section -->
+      <section class="card">
+        <h2>Active Streams</h2>
+        <div id="streamsList">
+          <p class="empty-state">No active streams</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Powered by FFmpeg</p>
+    </footer>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
