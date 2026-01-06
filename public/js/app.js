@@ -4,6 +4,7 @@ const API_BASE = '';
 // State
 let streams = [];
 let streamUrls = [];
+let configs = [];
 
 // DOM Elements
 const statusIndicator = document.getElementById('statusIndicator');
@@ -21,9 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeForm();
   checkServerStatus();
   loadStreams();
+  loadConfigs();
 
   // Set up periodic refresh
   setInterval(loadStreams, 5000);
+  setInterval(loadConfigs, 10000);
 });
 
 // Form initialization
@@ -111,6 +114,184 @@ async function loadStreams() {
   } catch (error) {
     console.error('Error loading streams:', error);
   }
+}
+
+// Load saved configurations
+async function loadConfigs() {
+  try {
+    const response = await fetch(`${API_BASE}/configs`);
+    const data = await response.json();
+
+    configs = data.configs || [];
+    renderConfigs();
+  } catch (error) {
+    console.error('Error loading configs:', error);
+  }
+}
+
+// Render saved configurations list
+function renderConfigs() {
+  const configsList = document.getElementById('configsList');
+
+  if (configs.length === 0) {
+    configsList.innerHTML = '<p class="empty-state">No saved configurations</p>';
+    return;
+  }
+
+  configsList.innerHTML = configs.map(config => `
+    <div class="config-list-item">
+      <div class="config-list-header">
+        <div class="config-list-title">
+          ${config.name}
+          ${config.autoStart ? '<span class="auto-start-badge">Auto-Start</span>' : ''}
+        </div>
+        <div class="config-list-info">
+          <span class="info-chip">${config.columns}×${config.rows}</span>
+          <span class="info-chip">${config.streamUrls.length} cameras</span>
+        </div>
+      </div>
+      <div class="config-list-actions" onclick="event.stopPropagation()">
+        <button class="btn-action btn-success-action" onclick="startFromConfig('${config.id}')" title="Start stream">
+          ▶
+        </button>
+        <button class="btn-action" onclick="viewConfig('${config.id}')" title="View details">
+          👁
+        </button>
+        <button class="btn-action btn-danger-action" onclick="deleteConfig('${config.id}')" title="Delete">
+          🗑
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Start stream from saved config
+async function startFromConfig(configId) {
+  const config = configs.find(c => c.id === configId);
+  if (!config) return;
+
+  const streamId = prompt(`Enter stream ID (or leave blank to use "${config.name}"):`, config.name);
+  if (streamId === null) return; // User cancelled
+
+  try {
+    const response = await fetch(`${API_BASE}/streams/from-config/${configId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        streamId: streamId || config.name
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to start stream');
+    }
+
+    showSuccess(`Stream "${streamId || config.name}" started from saved configuration!`);
+    loadStreams();
+  } catch (error) {
+    showError(error.message);
+  }
+}
+
+// View config details
+function viewConfig(configId) {
+  const config = configs.find(c => c.id === configId);
+  if (!config) return;
+
+  document.getElementById('modalTitle').textContent = `Configuration: ${config.name}`;
+  document.getElementById('modalBody').innerHTML = `
+    <div class="detail-section">
+      <h3>Settings</h3>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="detail-label">Grid Layout</span>
+          <span class="detail-value">${config.columns}×${config.rows}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Resolution</span>
+          <span class="detail-value">${config.outputWidth}×${config.outputHeight}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Framerate</span>
+          <span class="detail-value">${config.framerate} fps</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Auto-Start</span>
+          <span class="detail-value">${config.autoStart ? 'Yes' : 'No'}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <h3>Camera URLs (${config.streamUrls.length})</h3>
+      <div class="camera-sources-list">
+        ${config.streamUrls.map((url, index) => `
+          <div class="camera-source-item">
+            <div class="camera-source-number">#${index + 1}</div>
+            <div class="camera-source-url">${url}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-info">
+        <span class="text-secondary">Saved: ${new Date(config.savedAt).toLocaleString()}</span>
+      </div>
+    </div>
+
+    <div class="detail-actions">
+      <button class="btn-primary" onclick="startFromConfigModal('${config.id}')">
+        Start Stream
+      </button>
+      <button class="btn-danger" onclick="deleteConfigFromModal('${config.id}')">
+        Delete Configuration
+      </button>
+    </div>
+  `;
+
+  document.getElementById('streamDetailModal').style.display = 'flex';
+}
+
+// Start from config (from modal)
+async function startFromConfigModal(configId) {
+  closeDetailModal();
+  await startFromConfig(configId);
+}
+
+// Delete config
+async function deleteConfig(configId) {
+  const config = configs.find(c => c.id === configId);
+  if (!config) return;
+
+  if (!confirm(`Delete configuration "${config.name}"?`)) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/configs/${configId}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete configuration');
+    }
+
+    showSuccess('Configuration deleted!');
+    loadConfigs();
+  } catch (error) {
+    showError(error.message);
+  }
+}
+
+// Delete config from modal
+async function deleteConfigFromModal(configId) {
+  closeDetailModal();
+  await deleteConfig(configId);
 }
 
 // Render streams list (simplified)
@@ -264,6 +445,8 @@ async function handleCreateStream(e) {
   const outputWidth = parseInt(document.getElementById('outputWidth').value);
   const outputHeight = parseInt(document.getElementById('outputHeight').value);
   const framerate = parseInt(document.getElementById('framerate').value);
+  const saveConfig = document.getElementById('saveConfig').checked;
+  const autoStart = document.getElementById('autoStart').checked;
 
   const urls = streamUrls
     .map(input => input.value.trim())
@@ -287,7 +470,9 @@ async function handleCreateStream(e) {
         rows,
         outputWidth,
         outputHeight,
-        framerate
+        framerate,
+        saveConfig,
+        autoStart
       })
     });
 
@@ -296,8 +481,12 @@ async function handleCreateStream(e) {
       throw new Error(error.error || 'Failed to create stream');
     }
 
-    showSuccess('Stream created successfully!');
+    showSuccess(`Stream created successfully!${saveConfig ? ' Configuration saved.' : ''}`);
     createStreamForm.reset();
+
+    // Reset checkboxes to default
+    document.getElementById('saveConfig').checked = true;
+    document.getElementById('autoStart').checked = false;
 
     // Reset URL inputs
     streamUrlsContainer.innerHTML = '';
@@ -307,6 +496,9 @@ async function handleCreateStream(e) {
     }
 
     loadStreams();
+    if (saveConfig) {
+      loadConfigs();
+    }
   } catch (error) {
     showError(error.message);
   }

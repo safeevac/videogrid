@@ -255,6 +255,30 @@ input::placeholder {
   border-color: var(--primary-color);
 }
 
+/* Form Checkboxes */
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.form-check-input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--primary-color);
+}
+
+.form-check-label {
+  margin: 0;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: normal;
+}
+
 .empty-state {
   text-align: center;
   color: var(--text-secondary);
@@ -916,4 +940,74 @@ footer {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* Configuration List Items */
+.config-list-item {
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  transition: all 0.2s;
+}
+
+.config-list-item:hover {
+  border-color: rgba(109, 177, 76, 0.3);
+}
+
+.config-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.config-list-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.auto-start-badge {
+  padding: 0.2rem 0.6rem;
+  background: rgba(109, 177, 76, 0.2);
+  border: 1px solid rgba(109, 177, 76, 0.4);
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.config-list-info {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.config-list-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.btn-success-action {
+  color: var(--success-color);
+}
+
+.btn-success-action:hover {
+  border-color: var(--success-color);
+}
+
+.detail-info {
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  font-size: 0.85rem;
 }

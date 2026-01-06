@@ -251,12 +251,13 @@ app.post('/streams', async (req, res) => {
 
     // Save configuration if requested
     if (saveConfig) {
-      await configStore.set({
+      const savedConfig = await configStore.set({
         id: configId || undefined,
         name: streamId,
         ...streamConfig,
-        autoStart: false
+        autoStart: req.body.autoStart || false
       });
+      console.log(`[API] Saved configuration: ${savedConfig.name} (ID: ${savedConfig.id})`);
     }
 
     // Create stream

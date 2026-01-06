@@ -15,33 +15,71 @@ async function checkCameraUrl(url, timeout = 5000) {
       const protocol = parsedUrl.protocol === 'https:' ? https : http;
 
       const options = {
-        method: 'HEAD',
+        method: 'GET', // Use GET for MJPEG streams
         hostname: parsedUrl.hostname,
         port: parsedUrl.port,
         path: parsedUrl.pathname + parsedUrl.search,
         timeout: timeout,
         headers: {
-          'User-Agent': 'VideoGrid-HealthCheck/1.0'
+          'User-Agent': 'VideoGrid-HealthCheck/1.0',
+          'Accept': 'multipart/x-mixed-replace'
         }
       };
+
+      const startTime = Date.now();
+      let dataReceived = false;
+      let bytesReceived = 0;
 
       const req = protocol.request(options, (res) => {
         const isSuccess = res.statusCode >= 200 && res.statusCode < 400;
 
-        resolve({
-          url: url,
-          status: isSuccess ? 'ok' : 'error',
-          statusCode: res.statusCode,
-          statusMessage: res.statusMessage,
-          reachable: true,
-          responseTime: Date.now() - startTime
-        });
+        if (!isSuccess) {
+          req.destroy();
+          resolve({
+            url: url,
+            status: 'error',
+            statusCode: res.statusCode,
+            statusMessage: res.statusMessage,
+            reachable: false,
+            responseTime: Date.now() - startTime
+          });
+          return;
+        }
 
-        // Abort the request to free resources
-        req.destroy();
+        // For MJPEG streams, wait for some data to confirm it's working
+        const dataHandler = (chunk) => {
+          dataReceived = true;
+          bytesReceived += chunk.length;
+
+          // Once we receive some data, the stream is confirmed working
+          req.destroy();
+          resolve({
+            url: url,
+            status: 'ok',
+            statusCode: res.statusCode,
+            statusMessage: `Streaming (${bytesReceived} bytes)`,
+            reachable: true,
+            responseTime: Date.now() - startTime
+          });
+        };
+
+        res.once('data', dataHandler);
+
+        // If no data after 2 seconds, still consider it OK if status is 200
+        setTimeout(() => {
+          if (!dataReceived) {
+            req.destroy();
+            resolve({
+              url: url,
+              status: 'ok',
+              statusCode: res.statusCode,
+              statusMessage: 'Connected',
+              reachable: true,
+              responseTime: Date.now() - startTime
+            });
+          }
+        }, 2000);
       });
-
-      const startTime = Date.now();
 
       req.on('timeout', () => {
         req.destroy();
