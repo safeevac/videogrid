@@ -39,13 +39,23 @@ function buildFFmpegArgs(options) {
 
   const args = [
     '-loglevel', loglevel,
-    '-fflags', '+genpts',
-    '-use_wallclock_as_timestamps', '1'
+    // Low latency flags - minimize buffering
+    '-fflags', 'nobuffer',
+    '-flags', 'low_delay',
+    '-avioflags', 'direct',
+    '-probesize', '32',
+    '-analyzeduration', '0'
   ];
 
-  // Add input streams
+  // Add input streams with fault tolerance
   streamUrls.slice(0, expectedStreams).forEach(url => {
     args.push(
+      // Input-specific options before -i
+      '-reconnect', '1',              // Enable reconnection
+      '-reconnect_streamed', '1',     // Reconnect even if stream started
+      '-reconnect_delay_max', '5',    // Max 5 seconds between reconnect attempts
+      '-timeout', '10000000',         // 10 second timeout (in microseconds)
+      '-thread_queue_size', '512',    // Smaller queue for lower latency
       '-i', url,
       '-r', framerate.toString()
     );
@@ -88,7 +98,10 @@ function buildFFmpegArgs(options) {
     '-map', '[out]',
     '-c:v', 'mjpeg',
     '-q:v', '3',
+    // Output format options for low latency
     '-f', 'mjpeg',
+    '-flush_packets', '1',  // Flush packets immediately
+    '-fflags', '+flush_packets',
     '-'
   );
 
