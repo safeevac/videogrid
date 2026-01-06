@@ -1263,3 +1263,24 @@ textarea::placeholder {
   align-items: center;
   flex-wrap: wrap;
 }
+
+/* Icon-only buttons (refresh, etc.) */
+.btn-icon {
+  background: var(--input-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 0.75rem;
+  min-width: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover {
+  background: var(--card-bg);
+  border-color: var(--primary-color);
+}
+
+.btn-icon:active {
+  transform: scale(0.95);
+}
