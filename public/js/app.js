@@ -747,7 +747,18 @@ function renderCameras() {
         <div class="camera-item-title">${camera.name}</div>
         ${camera.location ? `<div class="camera-item-location">${camera.location}</div>` : ''}
       </div>
-      <div class="camera-item-url">${camera.url}</div>
+      <div class="camera-item-urls">
+        <div class="camera-item-url-row">
+          <span class="url-label-small">Low:</span>
+          <span class="camera-item-url">${camera.url}</span>
+        </div>
+        ${camera.highResUrl ? `
+          <div class="camera-item-url-row">
+            <span class="url-label-small">High:</span>
+            <span class="camera-item-url">${camera.highResUrl}</span>
+          </div>
+        ` : ''}
+      </div>
       ${camera.notes ? `<div class="camera-item-notes">${camera.notes}</div>` : ''}
       <div class="camera-item-actions">
         <button class="btn-action" onclick="editCamera('${camera.id}')" title="Edit">
@@ -836,6 +847,7 @@ function editCamera(cameraId) {
   document.getElementById('editCameraId').value = camera.id;
   document.getElementById('cameraName').value = camera.name;
   document.getElementById('cameraUrl').value = camera.url;
+  document.getElementById('cameraHighResUrl').value = camera.highResUrl || '';
   document.getElementById('cameraLocation').value = camera.location || '';
   document.getElementById('cameraNotes').value = camera.notes || '';
   document.getElementById('cameraModal').style.display = 'flex';
@@ -848,6 +860,7 @@ async function handleSaveCamera(e) {
   const cameraId = document.getElementById('editCameraId').value;
   const name = document.getElementById('cameraName').value;
   const url = document.getElementById('cameraUrl').value;
+  const highResUrl = document.getElementById('cameraHighResUrl').value;
   const location = document.getElementById('cameraLocation').value;
   const notes = document.getElementById('cameraNotes').value;
 
@@ -864,6 +877,7 @@ async function handleSaveCamera(e) {
       body: JSON.stringify({
         name,
         url,
+        highResUrl,
         location,
         notes
       })

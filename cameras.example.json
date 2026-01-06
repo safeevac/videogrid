@@ -2,9 +2,10 @@
   {
     "id": "camera_example_1",
     "name": "Lobby Camera 1",
-    "url": "http://camera1.local/stream",
+    "url": "http://camera1.local/stream/video/low",
+    "highResUrl": "http://camera1.local/stream/video",
     "location": "Main Lobby - Entrance",
-    "notes": "Front entrance view, 1080p",
+    "notes": "Front entrance view, 1080p available",
     "createdAt": "2026-01-06T12:00:00.000Z",
     "updatedAt": "2026-01-06T12:00:00.000Z"
   },

@@ -57,7 +57,7 @@ app.get('/cameras/:cameraId', (req, res) => {
  */
 app.post('/cameras', async (req, res) => {
   try {
-    const { name, url, location, notes } = req.body;
+    const { name, url, highResUrl, location, notes } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: 'name is required' });
@@ -70,6 +70,7 @@ app.post('/cameras', async (req, res) => {
     const camera = await cameraStore.set({
       name,
       url,
+      highResUrl: highResUrl || '',
       location: location || '',
       notes: notes || ''
     });
@@ -94,12 +95,13 @@ app.put('/cameras/:cameraId', async (req, res) => {
       return res.status(404).json({ error: 'Camera not found' });
     }
 
-    const { name, url, location, notes } = req.body;
+    const { name, url, highResUrl, location, notes } = req.body;
 
     const updatedCamera = await cameraStore.set({
       ...existingCamera,
       name: name || existingCamera.name,
       url: url || existingCamera.url,
+      highResUrl: highResUrl !== undefined ? highResUrl : existingCamera.highResUrl,
       location: location !== undefined ? location : existingCamera.location,
       notes: notes !== undefined ? notes : existingCamera.notes
     });
@@ -344,7 +346,20 @@ app.post('/streams', async (req, res) => {
 
     if (cameraIds && Array.isArray(cameraIds) && cameraIds.length > 0) {
       const cameras = cameraStore.getByIds(cameraIds);
-      finalStreamUrls = cameras.map(c => c.url);
+
+      // Choose URL based on layout type and camera position
+      finalStreamUrls = cameras.map((camera, index) => {
+        // For featured layout: use high-res for main camera (index 0), low-res for thumbnails
+        if (layout === 'featured' && index === 0 && camera.highResUrl) {
+          return camera.highResUrl;
+        }
+        // For PIP layout: use high-res for main camera (index 0), low-res for PIP
+        if (layout === 'pip' && index === 0 && camera.highResUrl) {
+          return camera.highResUrl;
+        }
+        // For grid layout or thumbnails: always use low-res
+        return camera.url;
+      });
     }
 
     if (!finalStreamUrls || !Array.isArray(finalStreamUrls) || finalStreamUrls.length === 0) {

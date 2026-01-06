@@ -76,6 +76,11 @@ class CameraStore {
       camera.createdAt = new Date().toISOString();
     }
 
+    // Validate URLs
+    if (!camera.url) {
+      throw new Error('Camera must have at least a url (low-res)');
+    }
+
     // Update timestamp
     camera.updatedAt = new Date().toISOString();
 

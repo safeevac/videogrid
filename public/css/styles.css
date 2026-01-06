@@ -1216,3 +1216,31 @@ textarea::placeholder {
 .layout-info-box strong {
   color: var(--primary-color);
 }
+
+/* Camera URL Display */
+.camera-item-urls {
+  margin: 0.5rem 0;
+}
+
+.camera-item-url-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.url-label-small {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  min-width: 40px;
+  text-transform: uppercase;
+}
+
+.form-help {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}

@@ -224,8 +224,15 @@
             </div>
 
             <div class="form-group">
-              <label for="cameraUrl">Stream URL *</label>
-              <input type="text" id="cameraUrl" placeholder="http://camera1.local/stream" required>
+              <label for="cameraUrl">Low-Res Stream URL *</label>
+              <input type="text" id="cameraUrl" placeholder="http://camera1.local/stream/video/low" required>
+              <small class="form-help">Used in grid layouts and thumbnails</small>
+            </div>
+
+            <div class="form-group">
+              <label for="cameraHighResUrl">High-Res Stream URL</label>
+              <input type="text" id="cameraHighResUrl" placeholder="http://camera1.local/stream/video">
+              <small class="form-help">Used for large displays in featured/PIP layouts (optional)</small>
             </div>
 
             <div class="form-group">
